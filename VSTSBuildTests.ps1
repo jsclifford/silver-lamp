@@ -20,3 +20,6 @@ pwd
 
 Write-Host "Getting file contents"
 ls
+
+Write-Host "PSScriptroot"
+$PSScriptRoot
