@@ -14,3 +14,9 @@ $env:BUILD_SOURCESDIRECTORY
 
 Write-Host "System.DefaultWorkingDirectory"
 $env:SYSTEM_DEFAULTWORKINGDIRECTORY
+
+Write-Host "Getting current directory"
+pwd
+
+Write-Host "Getting file contents"
+ls
