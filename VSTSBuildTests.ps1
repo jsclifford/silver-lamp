@@ -23,3 +23,5 @@ ls
 
 Write-Host "PSScriptroot"
 $PSScriptRoot
+
+Write-Host "Custom Variable: $customVariable"
