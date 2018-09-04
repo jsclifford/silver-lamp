@@ -61,3 +61,12 @@ Properties {
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
     $TestOutputFormat = "NUnitXml"
 }
+
+Task BeforeStageFiles {
+
+}
+
+# Executes after the StageFiles task.
+Task AfterStageFiles {
+
+}

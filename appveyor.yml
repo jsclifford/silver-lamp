@@ -21,7 +21,7 @@ skip_commits:
 #      environment configuration  #
 #---------------------------------#
 environment:
-  codecovetoken:
+  CODECOV_TOKEN:
     secure: O6YZH9O8+5UPwS4c7sX4Bw23erwCjx9iZWrhAHqq6uW7PwFFwuIEtzNg8mcD8RbZ
   default_tests: y
 
@@ -47,12 +47,13 @@ test_script:
 
 after_test:
 - ps: $testResultsPath = Join-Path $pwd -ChildPath "\appveyor\release\PesterReport"
+- ps: $codeCoverageReport = Resolve-Path $testResultsPath\CodeCoverage.xml
 - ps: echo "$testResultsPath"
 - ps: (New-Object 'System.Net.WebClient').UploadFile("https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path $testResultsPath\Unit.TEST.xml))
 - ps: |
       $env:PATH = 'C:\msys64\usr\bin;' + $env:PATH
       Invoke-WebRequest -Uri 'https://codecov.io/bash' -OutFile codecov.sh
-      bash codecov.sh -f (Resolve-Path $testResultsPath\CodeCoverage.xml) -t $env:codecovetoken
+      bash codecov.sh -f $codeCoverageReport -t $env:CODECOV_TOKEN -n SilverLamp
 branches:
   only:
   - master
