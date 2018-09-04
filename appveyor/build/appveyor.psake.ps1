@@ -13,16 +13,12 @@ if($env:default_tests -eq 'y'){
 
 
 if ($psake.build_success -eq $false){
-    $error_message = @"
-Unit Test Failed. Error: 
-$($psake.error_message)   
-"@
     if($null -ne $env:APPVEYOR_BUILD_FOLDER){
-        Add-AppveyorMessage -Message $error_message
+        Add-AppveyorMessage -Message "Unit Test Failed."
         Update-AppveyorTest -Name "PSake Unitest" -Outcome Failed -ErrorMessage $psake.error_message -Framework NUnit
         
     }else{
-        Write-Host "Psake Task failed. $($error_message)"
+        Write-Host "Psake Task failed. Unit Test Failed."
     }
     throw "Psake Build Failed"
 }else{
