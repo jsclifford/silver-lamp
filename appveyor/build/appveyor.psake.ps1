@@ -1,13 +1,14 @@
 Import-Module PSake
 
+$buildRoot = "$PSScriptRoot\build"
 if($env:default_tests -eq 'y'){
     # Builds the module by invoking psake on the build.psake.ps1 script.
     Write-Verbose "Running Psake task TestDefault" -Verbose
-    Invoke-psake $PSScriptRoot\build.psake.ps1 -taskList TestDefault
+    Invoke-psake -Path "$buildRoot\build.psake.ps1" -taskList TestDefault
 }else{
     # Builds the module by invoking psake on the build.psake.ps1 script.
     Write-Verbose "Running Psake task Test" -Verbose
-    Invoke-psake $PSScriptRoot\build.psake.ps1 -taskList Test
+    Invoke-psake -Path "$buildRoot\build.psake.ps1" -taskList Test
 }
 
 

@@ -29,7 +29,7 @@ if($env:default_tests -eq 'y'){
 }else{
     #$moduleData.RequiredModules | ForEach-Object { Install-Module $PSItem.ModuleName -RequiredVersion $PSItem.ModuleVersion -Repository PSGallery -Scope CurrentUser -Force -SkipPublisherCheck }
     Write-Verbose "Installing Required Modules in psd1 file." -Verbose
-    $moduleData.RequiredModules | ForEach-Object { Install-Module $PSItem -Repository PSGallery -Scope CurrentUser -Force }
+    $moduleData.RequiredModules | ForEach-Object { Install-Module $PSItem -Repository PSGallery -Scope CurrentUser -Force -SkipPublisherCheck }
 }
 
 Install-Module psake,psscriptanalyzer,platyPS -Scope CurrentUser -Force
