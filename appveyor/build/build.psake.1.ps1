@@ -2,7 +2,7 @@
 
 Task default -depends Build
 
-Task Test -requiredVariables TestRootDir, ModuleName, CodeCoverageEnabled, CodeCoverageFiles,CodeCoverageOutPutFile,CodeCoverageOutputFileFormat,PesterReportFolder  {
+Task Test -requiredVariables TestRootDir, CodeCoverageEnabled, CodeCoverageFiles,CodeCoverageOutPutFile,CodeCoverageOutputFileFormat,PesterReportFolder  {
     if (!(Get-Module Pester -ListAvailable)) {
         "Pester module is not installed. Skipping $($psake.context.currentTaskName) task."
         return
