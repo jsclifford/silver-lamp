@@ -475,7 +475,7 @@ Task TestDefault <#-depends BuildSimple #> -requiredVariables TestRootDir, Modul
     }
 
     Import-Module Pester
-
+    Write-Host "Running Test Default Task."
     try {
         #Microsoft.PowerShell.Management\Push-Location -LiteralPath "$TestRootDir\default"
 
