@@ -67,6 +67,19 @@ Task StageFiles -depends Init, Clean, BeforeStageFiles, CoreStageFiles {
     $CSVList | Export-Csv -NoTypeInformation -Path "$SolutionDir\resources\VSTBImportFile.csv" -Force
 }
 
+Task CoreStageFiles -requiredVariables ModuleOutDir, SrcRootDir {
+    if (!(Test-Path -LiteralPath $ModuleOutDir)) {
+        New-Item $ModuleOutDir -ItemType Directory -Verbose:$VerbosePreference > $null
+    }
+    else {
+        Write-Verbose "$($psake.context.currentTaskName) - directory already exists '$ModuleOutDir'."
+    }
+
+    Copy-Item -Path $SrcRootDir\* -Destination $ModuleOutDir -Recurse -Exclude $Exclude -Verbose:$VerbosePreference
+    # Copy-Item -Path $SolutionDir\README.md -Destination $ModuleOutDir -Exclude $Exclude -Verbose:$VerbosePreference
+    # Copy-Item -Path $SolutionDir\LICENSE -Destination $ModuleOutDir -Exclude $Exclude -Verbose:$VerbosePreference
+}
+
 Task Test -requiredVariables TestRootDir, ModuleName, CodeCoverageEnabled, CodeCoverageFiles,CodeCoverageOutPutFile,CodeCoverageOutputFileFormat,PesterReportFolder  {
     if (!(Get-Module Pester -ListAvailable)) {
         "Pester module is not installed. Skipping $($psake.context.currentTaskName) task."
