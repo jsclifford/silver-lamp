@@ -35,6 +35,38 @@ Task Clean -depends Init -requiredVariables OutDir {
     }
 }
 
+Task StageFiles -depends Init, Clean, BeforeStageFiles, CoreStageFiles {
+    #Create resources folder and generate CSV file
+    if(Test-Path("$SolutionDir\resources")){
+        Write-Verbose "Resources folder already created."
+    }else{
+        mkdir "$SolutionDir\resources"
+    }
+
+    $CSVList = @(
+        [PSCustomObject]@{
+            "TeamProjectName" = "VSTeamBuilderDemo"
+            "TeamName" = "MyTestTeam"
+            "TeamCode" = "MTT"
+            "TeamPath" = ""
+            "TeamDescription" = "Best Test Team"
+            "isCoded" = "y"
+            "ProcessOrder" = 1
+        },
+        [PSCustomObject]@{
+            "TeamProjectName" = "VSTeamBuilderDemo"
+            "TeamName" = "MyTestTeam2"
+            "TeamCode" = "MTT2"
+            "TeamPath" = "MTT"
+            "TeamDescription" = "Best Test Team2"
+            "isCoded" = "n"
+            "ProcessOrder" = 2
+        }
+    )
+
+    $CSVList | Export-Csv -NoTypeInformation -Path "$SolutionDir\resources\VSTBImportFile.csv" -Force
+}
+
 Task Test -requiredVariables TestRootDir, ModuleName, CodeCoverageEnabled, CodeCoverageFiles,CodeCoverageOutPutFile,CodeCoverageOutputFileFormat,PesterReportFolder  {
     if (!(Get-Module Pester -ListAvailable)) {
         "Pester module is not installed. Skipping $($psake.context.currentTaskName) task."
