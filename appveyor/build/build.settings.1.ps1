@@ -132,6 +132,19 @@ Properties {
     # the module. However, if there are such files, add their $SrcRootDir relative paths to the exclude list.
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
     $Exclude = @()
+
+    # Source information
+    $RepoCreationDate = Get-Date '2018-05-02'
+    $ProjectDir = $SrcRootDir
+    $ProjectBuildNumber = ((Get-Date) - $RepoCreationDate).Days
+    $ProjectMetadataInfo = "$(Get-Date -Format 'yyyyMMdd').$ProjectBuildNumber"
+
+    # Nuget packaging
+    $NugetExePath = Join-Path $SolutionDir 'nuget.exe'
+    $NugetPackagesDir = Join-Path $SolutionDir 'packages'
+    $NugetSpecPath = Join-Path $OutDir "SilverLamp.nuspec"
+    #$NugetPackageVersion = $VersionMetadata.LegacySemVer.Replace('-', ".$ProjectBuildNumber-")
+
 }
 
 Task BeforeStageFiles {
