@@ -47,13 +47,13 @@ test_script:
 
 after_test:
 - ps: $testResultsPath = Join-Path $pwd -ChildPath "\appveyor\release\PesterReport"
-- ps: $codeCoverageReport = Resolve-Path $testResultsPath\CodeCoverage.xml
+- ps: cd $testResultsPath
 - ps: echo "$testResultsPath"
 - ps: (New-Object 'System.Net.WebClient').UploadFile("https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path $testResultsPath\Unit.TEST.xml))
 - ps: |
       $env:PATH = 'C:\msys64\usr\bin;' + $env:PATH
       Invoke-WebRequest -Uri 'https://codecov.io/bash' -OutFile codecov.sh
-      bash codecov.sh -f $codeCoverageReport -t $env:CODECOV_TOKEN -n SilverLamp -F unittests
+      bash codecov.sh -f '*.xml' -t $env:CODECOV_TOKEN -n SilverLamp -F unittests
 branches:
   only:
   - master
