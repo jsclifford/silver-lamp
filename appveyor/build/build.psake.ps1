@@ -55,7 +55,7 @@
 ###############################################################################
 # Dot source the user's customized properties and extension tasks.
 ###############################################################################
-. $PSScriptRoot\build.settings.1.ps1
+. $PSScriptRoot\build.settings.ps1
 
 ###############################################################################
 # Private properties.
