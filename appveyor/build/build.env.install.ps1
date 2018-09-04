@@ -22,7 +22,7 @@ Write-Verbose $seperator -Verbose
 
 Install-PackageProvider -Name NuGet -Force -Scope CurrentUser
 
-$moduleData = Import-PowerShellDataFile "$($buildfolder)\src\VSTeamBuilder.psd1"
+$moduleData = Import-PowerShellDataFile "$($buildfolder)\src\SilverLamp.psd1"
 
 if($env:default_tests -eq 'y'){
     Write-Verbose "Skipping Required Modules installation." -Verbose
@@ -60,5 +60,5 @@ if($env:default_tests -eq 'y'){
 
 Write-Verbose $seperator
 
-# Write-Verbose "Trying to import VSTeamBuilder in path $($buildfolder)\src\VSTeamBuilder.psd1" -Verbose
-# Import-Module "$($buildfolder)\src\VSTeamBuilder.psd1" -Scope Global -Force
+# Write-Verbose "Trying to import SilverLamp in path $($buildfolder)\src\SilverLamp.psd1" -Verbose
+# Import-Module "$($buildfolder)\src\SilverLamp.psd1" -Scope Global -Force
