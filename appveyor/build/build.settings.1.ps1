@@ -116,6 +116,12 @@ Properties {
     # Windows Server 2008 R2), 2 for SHA2 to support only newer Windows versions.
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
     $CatalogVersion = 2
+
+    # In addition, PFX certificates are supported in an interactive scenario only,
+    # as a way to import a certificate into the user personal store for later use.
+    # This can be provided using the CertPfxPath parameter. PFX passwords will not be stored.
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
+    $SettingsPath = "$env:LOCALAPPDATA\Plaster\SilverLamp\SecuredBuildSettings.clixml"
 }
 
 Task BeforeStageFiles {
