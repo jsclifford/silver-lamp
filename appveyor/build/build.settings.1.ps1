@@ -145,6 +145,23 @@ Properties {
     $NugetSpecPath = Join-Path $OutDir "SilverLamp.nuspec"
     #$NugetPackageVersion = $VersionMetadata.LegacySemVer.Replace('-', ".$ProjectBuildNumber-")
 
+    # -------------------- Publishing properties ------------------------------
+
+    # Your NuGet API key for the PSGallery.  Leave it as $null and the first time you publish,
+    # you will be prompted to enter your API key.  The build will store the key encrypted in the
+    # settings file, so that on subsequent publishes you will no longer be prompted for the API key.
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
+    $NuGetApiKey = $null
+
+    # Name of the repository you wish to publish to. If $null is specified the default repo (PowerShellGallery) is used.
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
+    $PublishRepository = $null
+
+    # Path to the release notes file.  Set to $null if the release notes reside in the manifest file.
+    # The contents of this file are used during publishing for the ReleaseNotes parameter.
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
+    $ReleaseNotesPath = "$SolutionDir\ReleaseNotes.md"
+
 }
 
 Task BeforeStageFiles {
