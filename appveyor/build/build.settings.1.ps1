@@ -122,6 +122,16 @@ Properties {
     # This can be provided using the CertPfxPath parameter. PFX passwords will not be stored.
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
     $SettingsPath = "$env:LOCALAPPDATA\Plaster\SilverLamp\SecuredBuildSettings.clixml"
+
+    # Default Locale used for help generation, defaults to en-US.
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
+    $DefaultLocale = 'en-US'
+
+    # Items in the $Exclude array will not be copied to the $OutDir e.g. $Exclude = @('.gitattributes')
+    # Typically you wouldn't put any file under the src dir unless the file was going to ship with
+    # the module. However, if there are such files, add their $SrcRootDir relative paths to the exclude list.
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
+    $Exclude = @()
 }
 
 Task BeforeStageFiles {
