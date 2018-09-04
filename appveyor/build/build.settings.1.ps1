@@ -17,6 +17,12 @@ Properties {
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
     $BuildRootDir = "$SolutionDir\build"
 
+    # The name of your module should match the basename of the PSD1 file.
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
+    $ModuleName = Get-Item $SrcRootDir/*.psd1 |
+                      Where-Object { $null -ne (Test-ModuleManifest -Path $_ -ErrorAction SilentlyContinue) } |
+                      Select-Object -First 1 | Foreach-Object BaseName
+
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
     $OutDir = "$SolutionDir\release"
 
