@@ -26,7 +26,7 @@ Properties {
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
     $OutDir = "$SolutionDir\release"
 
-    # ---------------------- Testing properties -------------------------------
+     # ---------------------- Testing properties -------------------------------
 
     # Enable/disable Pester code coverage reporting.
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
@@ -49,4 +49,15 @@ Properties {
     #CodeCoverageOutputFileFormat
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
     $CodeCoverageOutputFileFormat = "JaCoCo"
+
+    # Specifies an output file path to send to Invoke-Pester's -OutputFile parameter.
+    # This is typically used to write out test results so that they can be sent to a CI
+    # system like AppVeyor.
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
+    $TestOutputFile = "$PesterReportFolder\Unit.TEST.xml"
+
+    # Specifies the test output format to use when the TestOutputFile property is given
+    # a path.  This parameter is passed through to Invoke-Pester's -OutputFormat parameter.
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
+    $TestOutputFormat = "NUnitXml"
 }
