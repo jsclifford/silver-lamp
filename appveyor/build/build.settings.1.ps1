@@ -70,3 +70,73 @@ Task BeforeStageFiles {
 Task AfterStageFiles {
 
 }
+
+# Executes before the BeforeStageFiles phase of the Build task.
+Task BeforeBuild {
+    
+}
+
+# Executes after the Build task.
+Task AfterBuild {
+
+}
+
+###############################################################################
+# Customize these tasks for performing operations before and/or after BuildHelp.
+###############################################################################
+
+# Executes before the BuildHelp task.
+Task BeforeBuildHelp {
+}
+
+# Executes after the BuildHelp task.
+Task AfterBuildHelp {
+}
+
+###############################################################################
+# Customize these tasks for performing operations before and/or after BuildUpdatableHelp.
+###############################################################################
+
+# Executes before the BuildUpdatableHelp task.
+Task BeforeBuildUpdatableHelp {
+}
+
+# Executes after the BuildUpdatableHelp task.
+Task AfterBuildUpdatableHelp {
+}
+
+###############################################################################
+# Customize these tasks for performing operations before and/or after GenerateFileCatalog.
+###############################################################################
+
+# Executes before the GenerateFileCatalog task.
+Task BeforeGenerateFileCatalog {
+}
+
+# Executes after the GenerateFileCatalog task.
+Task AfterGenerateFileCatalog {
+}
+
+###############################################################################
+# Customize these tasks for performing operations before and/or after Install.
+###############################################################################
+
+# Executes before the Install task.
+Task BeforeInstall {
+}
+
+# Executes after the Install task.
+Task AfterInstall {
+}
+
+###############################################################################
+# Customize these tasks for performing operations before and/or after Publish.
+###############################################################################
+
+# Executes before the Publish task.
+Task BeforePublish {
+}
+
+# Executes after the Publish task.
+Task AfterPublish {
+}

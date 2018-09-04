@@ -80,6 +80,276 @@ Task CoreStageFiles -requiredVariables ModuleOutDir, SrcRootDir {
     # Copy-Item -Path $SolutionDir\LICENSE -Destination $ModuleOutDir -Exclude $Exclude -Verbose:$VerbosePreference
 }
 
+Task Build -depends Init, Clean, BeforeBuild, StageFiles, AfterStageFiles, Analyze, Sign, AfterBuild {
+}
+
+Task BuildSimple -depends Init, Clean, BeforeBuild, StageFiles, AfterStageFiles, AfterBuild {
+}
+
+Task Analyze -depends StageFiles `
+             -requiredVariables ModuleOutDir, ScriptAnalysisEnabled, ScriptAnalysisFailBuildOnSeverityLevel, ScriptAnalyzerSettingsPath {
+    if (!$ScriptAnalysisEnabled) {
+        "Script analysis is not enabled. Skipping $($psake.context.currentTaskName) task."
+        return
+    }
+
+    if (!(Get-Module PSScriptAnalyzer -ListAvailable)) {
+        "PSScriptAnalyzer module is not installed. Skipping $($psake.context.currentTaskName) task."
+        return
+    }
+
+    "ScriptAnalysisFailBuildOnSeverityLevel set to: $ScriptAnalysisFailBuildOnSeverityLevel"
+
+    $analysisResult = Invoke-ScriptAnalyzer -Path $ModuleOutDir -Settings $ScriptAnalyzerSettingsPath -Recurse -Verbose:$VerbosePreference
+    $analysisResult | Format-Table
+    switch ($ScriptAnalysisFailBuildOnSeverityLevel) {
+        'None' {
+            return
+        }
+        'Error' {
+            Assert -conditionToCheck (
+                ($analysisResult | Where-Object Severity -eq 'Error').Count -eq 0
+                ) -failureMessage 'One or more ScriptAnalyzer errors were found. Build cannot continue!'
+        }
+        'Warning' {
+            Assert -conditionToCheck (
+                ($analysisResult | Where-Object {
+                    $_.Severity -eq 'Warning' -or $_.Severity -eq 'Error'
+                }).Count -eq 0) -failureMessage 'One or more ScriptAnalyzer warnings were found. Build cannot continue!'
+        }
+        default {
+            Assert -conditionToCheck (
+                $analysisResult.Count -eq 0
+                ) -failureMessage 'One or more ScriptAnalyzer issues were found. Build cannot continue!'
+        }
+    }
+}
+
+Task Sign -depends StageFiles -requiredVariables CertPath, SettingsPath, ScriptSigningEnabled {
+    if (!$ScriptSigningEnabled) {
+        "Script signing is not enabled. Skipping $($psake.context.currentTaskName) task."
+        return
+    }
+
+    $validCodeSigningCerts = Get-ChildItem -Path $CertPath -CodeSigningCert -Recurse | Where-Object NotAfter -ge (Get-Date)
+    if (!$validCodeSigningCerts) {
+        throw "There are no non-expired code-signing certificates in $CertPath. You can either install " +
+              "a code-signing certificate into the certificate store or disable script analysis in build.settings.ps1."
+    }
+
+    $certSubjectNameKey = "CertSubjectName"
+    $storeCertSubjectName = $true
+
+    # Get the subject name of the code-signing certificate to be used for script signing.
+    if (!$CertSubjectName -and ($CertSubjectName = GetSetting -Key $certSubjectNameKey -Path $SettingsPath)) {
+        $storeCertSubjectName = $false
+    }
+    elseif (!$CertSubjectName) {
+        "A code-signing certificate has not been specified."
+        "The following non-expired, code-signing certificates are available in your certificate store:"
+        $validCodeSigningCerts | Format-List Subject,Issuer,Thumbprint,NotBefore,NotAfter
+
+        $CertSubjectName = Read-Host -Prompt 'Enter the subject name (case-sensitive) of the certificate to use for script signing'
+    }
+
+    # Find a code-signing certificate that matches the specified subject name.
+    $certificate = $validCodeSigningCerts |
+                       Where-Object { $_.SubjectName.Name -cmatch [regex]::Escape($CertSubjectName) } |
+                       Sort-Object NotAfter -Descending | Select-Object -First 1
+
+    if ($certificate) {
+        $SharedProperties.CodeSigningCertificate = $certificate
+
+        if ($storeCertSubjectName) {
+            SetSetting -Key $certSubjectNameKey -Value $certificate.SubjectName.Name -Path $SettingsPath
+            "The new certificate subject name has been stored in ${SettingsPath}."
+        }
+        else {
+            "Using stored certificate subject name $CertSubjectName from ${SettingsPath}."
+        }
+
+        $LineSep
+        "Using code-signing certificate: $certificate"
+        $LineSep
+
+        $files = @(Get-ChildItem -Path $ModuleOutDir\* -Recurse -Include *.ps1,*.psm1)
+        foreach ($file in $files) {
+            $setAuthSigParams = @{
+                FilePath = $file.FullName
+                Certificate = $certificate
+                Verbose = $VerbosePreference
+            }
+
+            $result = Microsoft.PowerShell.Security\Set-AuthenticodeSignature @setAuthSigParams
+            if ($result.Status -ne 'Valid') {
+                throw "Failed to sign script: $($file.FullName)."
+            }
+
+            "Successfully signed script: $($file.Name)"
+        }
+    }
+    else {
+        $expiredCert = Get-ChildItem -Path $CertPath -CodeSigningCert -Recurse |
+                           Where-Object { ($_.SubjectName.Name -cmatch [regex]::Escape($CertSubjectName)) -and
+                                          ($_.NotAfter -lt (Get-Date)) }
+                           Sort-Object NotAfter -Descending | Select-Object -First 1
+
+        if ($expiredCert) {
+            throw "The code-signing certificate `"$($expiredCert.SubjectName.Name)`" EXPIRED on $($expiredCert.NotAfter)."
+        }
+
+        throw 'No valid certificate subject name supplied or stored.'
+    }
+}
+
+Task BuildHelp -depends Build, BeforeBuildHelp, GenerateMarkdown, GenerateHelpFiles, AfterBuildHelp {
+}
+
+Task GenerateMarkdown -requiredVariables DefaultLocale, DocsRootDir, ModuleName, ModuleOutDir {
+    if (!(Get-Module platyPS -ListAvailable)) {
+        "platyPS module is not installed. Skipping $($psake.context.currentTaskName) task."
+        return
+    }
+
+    $moduleInfo = Import-Module $ModuleOutDir\$ModuleName.psd1 -Global -Force -PassThru
+    #$moduleInfo = Import-PowerShellDataFile $ModuleOutDir\$ModuleName.psd1
+    try {
+        if ($moduleInfo.ExportedCommands.Count -eq 0) {
+            "No commands have been exported. Skipping $($psake.context.currentTaskName) task."
+            return
+        }
+
+        if (!(Test-Path -LiteralPath $DocsRootDir)) {
+            New-Item $DocsRootDir -ItemType Directory > $null
+        }
+
+        if (Get-ChildItem -LiteralPath $DocsRootDir -Filter *.md -Recurse) {
+            Get-ChildItem -LiteralPath $DocsRootDir -Directory | ForEach-Object {
+                Update-MarkdownHelp -Path $_.FullName -Verbose:$VerbosePreference > $null
+            }
+        }
+
+        # ErrorAction set to SilentlyContinue so this command will not overwrite an existing MD file.
+        New-MarkdownHelp -Module $ModuleName -Locale $DefaultLocale -OutputFolder $DocsRootDir\$DefaultLocale `
+                         -WithModulePage -ErrorAction SilentlyContinue -Verbose:$VerbosePreference > $null
+    }
+    finally {
+        Remove-Module $ModuleName
+    }
+}
+
+Task GenerateHelpFiles -requiredVariables DocsRootDir, ModuleName, ModuleOutDir, OutDir {
+    if (!(Get-Module platyPS -ListAvailable)) {
+        "platyPS module is not installed. Skipping $($psake.context.currentTaskName) task."
+        return
+    }
+
+    if (!(Get-ChildItem -LiteralPath $DocsRootDir -Filter *.md -Recurse -ErrorAction SilentlyContinue)) {
+        "No markdown help files to process. Skipping $($psake.context.currentTaskName) task."
+        return
+    }
+
+    $helpLocales = (Get-ChildItem -Path $DocsRootDir -Directory).Name
+
+    # Generate the module's primary MAML help file.
+    foreach ($locale in $helpLocales) {
+        New-ExternalHelp -Path $DocsRootDir\$locale -OutputPath $ModuleOutDir\$locale -Force `
+                         -ErrorAction SilentlyContinue -Verbose:$VerbosePreference > $null
+    }
+}
+
+Task BuildUpdatableHelp -depends BuildHelp, BeforeBuildUpdatableHelp, CoreBuildUpdatableHelp, AfterBuildUpdatableHelp {
+}
+
+Task CoreBuildUpdatableHelp -requiredVariables DocsRootDir, ModuleName, UpdatableHelpOutDir {
+    if (!(Get-Module platyPS -ListAvailable)) {
+        "platyPS module is not installed. Skipping $($psake.context.currentTaskName) task."
+        return
+    }
+
+    $helpLocales = (Get-ChildItem -Path $DocsRootDir -Directory).Name
+
+    # Create updatable help output directory.
+    if (!(Test-Path -LiteralPath $UpdatableHelpOutDir)) {
+        New-Item $UpdatableHelpOutDir -ItemType Directory -Verbose:$VerbosePreference > $null
+    }
+    else {
+        Write-Verbose "$($psake.context.currentTaskName) - directory already exists '$UpdatableHelpOutDir'."
+        Get-ChildItem $UpdatableHelpOutDir | Remove-Item -Recurse -Force -Verbose:$VerbosePreference
+    }
+
+    # Generate updatable help files.  Note: this will currently update the version number in the module's MD
+    # file in the metadata.
+    foreach ($locale in $helpLocales) {
+        New-ExternalHelpCab -CabFilesFolder $ModuleOutDir\$locale -LandingPagePath $DocsRootDir\$locale\$ModuleName.md `
+                            -OutputFolder $UpdatableHelpOutDir -Verbose:$VerbosePreference > $null
+    }
+}
+
+Task GenerateFileCatalog -depends Build, BuildHelp, BeforeGenerateFileCatalog, CoreGenerateFileCatalog, AfterGenerateFileCatalog {
+}
+
+Task CoreGenerateFileCatalog -requiredVariables CatalogGenerationEnabled, CatalogVersion, ModuleName, ModuleOutDir, OutDir {
+    if (!$CatalogGenerationEnabled) {
+        "FileCatalog generation is not enabled. Skipping $($psake.context.currentTaskName) task."
+        return
+    }
+
+    if (!(Get-Command Microsoft.PowerShell.Security\New-FileCatalog -ErrorAction SilentlyContinue)) {
+        "FileCatalog commands not available on this version of PowerShell. Skipping $($psake.context.currentTaskName) task."
+        return
+    }
+
+    $catalogFilePath = "$OutDir\$ModuleName.cat"
+
+    $newFileCatalogParams = @{
+        Path = $ModuleOutDir
+        CatalogFilePath = $catalogFilePath
+        CatalogVersion = $CatalogVersion
+        Verbose = $VerbosePreference
+    }
+
+    Microsoft.PowerShell.Security\New-FileCatalog @newFileCatalogParams > $null
+
+    if ($ScriptSigningEnabled) {
+        if ($SharedProperties.CodeSigningCertificate) {
+            $setAuthSigParams = @{
+                FilePath = $catalogFilePath
+                Certificate = $SharedProperties.CodeSigningCertificate
+                Verbose = $VerbosePreference
+            }
+
+            $result = Microsoft.PowerShell.Security\Set-AuthenticodeSignature @setAuthSigParams
+            if ($result.Status -ne 'Valid') {
+                throw "Failed to sign file catalog: $($catalogFilePath)."
+            }
+
+            "Successfully signed file catalog: $($catalogFilePath)"
+        }
+        else {
+            "No code-signing certificate was found to sign the file catalog."
+        }
+    }
+    else {
+        "Script signing is not enabled. Skipping signing of file catalog."
+    }
+
+    Move-Item -LiteralPath $newFileCatalogParams.CatalogFilePath -Destination $ModuleOutDir
+}
+
+Task Install -depends Build, BuildHelp, GenerateFileCatalog, BeforeInstall, CoreInstall, AfterInstall {
+}
+
+Task CoreInstall -requiredVariables ModuleOutDir {
+    if (!(Test-Path -LiteralPath $InstallPath)) {
+        Write-Verbose 'Creating install directory'
+        New-Item -Path $InstallPath -ItemType Directory -Verbose:$VerbosePreference > $null
+    }
+
+    Copy-Item -Path $ModuleOutDir\* -Destination $InstallPath -Verbose:$VerbosePreference -Recurse -Force
+    "Module installed into $InstallPath"
+}
+
 Task Test -requiredVariables TestRootDir, ModuleName, CodeCoverageEnabled, CodeCoverageFiles,CodeCoverageOutPutFile,CodeCoverageOutputFileFormat,PesterReportFolder  {
     if (!(Get-Module Pester -ListAvailable)) {
         "Pester module is not installed. Skipping $($psake.context.currentTaskName) task."
