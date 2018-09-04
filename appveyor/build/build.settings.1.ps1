@@ -26,7 +26,22 @@ Properties {
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
     $OutDir = "$SolutionDir\release"
 
-     # ---------------------- Testing properties -------------------------------
+    # The local installation directory for the install task. Defaults to your home Modules location.
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
+    $InstallPath = Join-Path (Split-Path $profile.CurrentUserAllHosts -Parent) `
+                             "Modules\$ModuleName\$((Test-ModuleManifest -Path $SrcRootDir\$ModuleName.psd1).Version.ToString())"
+
+    # Default Locale used for help generation, defaults to en-US.
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
+    $DefaultLocale = 'en-US'
+
+    # Items in the $Exclude array will not be copied to the $OutDir e.g. $Exclude = @('.gitattributes')
+    # Typically you wouldn't put any file under the src dir unless the file was going to ship with
+    # the module. However, if there are such files, add their $SrcRootDir relative paths to the exclude list.
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
+    $Exclude = @() 
+    
+    # ---------------------- Testing properties -------------------------------
 
     # Enable/disable Pester code coverage reporting.
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
