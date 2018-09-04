@@ -26,6 +26,7 @@ environment:
 
 install:
 - ps: .\appveyor\build\VSTSBuildTests.ps1
+- ps: .\appveyor\build\build.env.install.ps1
 
 #---------------------------------#
 #      build configuration        #
@@ -52,6 +53,7 @@ after_test:
       bash codecov.sh -f "$testResultsPath\CodeCoverage.xml" -t $env:codecovetoken
 branches:
   only:
+  - master
   - dev
 skip_tags: true
 
