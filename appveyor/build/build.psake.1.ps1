@@ -16,6 +16,15 @@ Properties {
 
 Task default -depends Build
 
+Task Init -requiredVariables OutDir {
+    if (!(Test-Path -LiteralPath $OutDir)) {
+        New-Item $OutDir -ItemType Directory -Verbose:$VerbosePreference > $null
+    }
+    else {
+        Write-Verbose "$($psake.context.currentTaskName) - directory already exists '$OutDir'."
+    }
+}
+
 Task Test -requiredVariables TestRootDir, ModuleName, CodeCoverageEnabled, CodeCoverageFiles,CodeCoverageOutPutFile,CodeCoverageOutputFileFormat,PesterReportFolder  {
     if (!(Get-Module Pester -ListAvailable)) {
         "Pester module is not installed. Skipping $($psake.context.currentTaskName) task."
