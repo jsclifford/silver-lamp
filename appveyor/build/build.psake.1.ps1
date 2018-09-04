@@ -575,3 +575,86 @@ Task DownloadTfsNugetPackage -depends CleanTFSNugetPackages -requiredVariables N
         {}
     }
 }
+
+###############################################################################
+# Secondary/utility tasks - typically used to manage stored build settings.
+###############################################################################
+
+Task ? -description 'Lists the available tasks' {
+    "Available tasks:"
+    $psake.context.Peek().Tasks.Keys | Sort-Object
+}
+
+Task RemoveApiKey -requiredVariables SettingsPath {
+    if (GetSetting -Path $SettingsPath -Key NuGetApiKey) {
+        RemoveSetting -Path $SettingsPath -Key NuGetApiKey
+    }
+}
+
+Task StoreApiKey -requiredVariables SettingsPath {
+    $promptForKeyCredParams = @{
+        DestinationPath = $SettingsPath
+        Message         = 'Enter your NuGet API key in the password field'
+        Key             = 'NuGetApiKey'
+    }
+
+    PromptUserForCredentialAndStorePassword @promptForKeyCredParams
+    "The NuGetApiKey has been stored in $SettingsPath"
+}
+
+Task ShowApiKey -requiredVariables SettingsPath {
+    $OFS = ""
+    if ($NuGetApiKey) {
+        "The embedded (partial) NuGetApiKey is: $($NuGetApiKey[0..7])"
+    }
+    elseif ($NuGetApiKey = GetSetting -Path $SettingsPath -Key NuGetApiKey) {
+        "The stored (partial) NuGetApiKey is: $($NuGetApiKey[0..7])"
+    }
+    else {
+        "The NuGetApiKey has not been provided or stored."
+        return
+    }
+
+    "To see the full key, use the task 'ShowFullApiKey'"
+}
+
+Task ShowFullApiKey -requiredVariables SettingsPath {
+    if ($NuGetApiKey) {
+        "The embedded NuGetApiKey is: $NuGetApiKey"
+    }
+    elseif ($NuGetApiKey = GetSetting -Path $SettingsPath -Key NuGetApiKey) {
+        "The stored NuGetApiKey is: $NuGetApiKey"
+    }
+    else {
+        "The NuGetApiKey has not been provided or stored."
+    }
+}
+
+Task RemoveCertSubjectName -requiredVariables SettingsPath {
+    if (GetSetting -Path $SettingsPath -Key CertSubjectName) {
+        RemoveSetting -Path $SettingsPath -Key CertSubjectName
+    }
+}
+
+Task StoreCertSubjectName -requiredVariables SettingsPath {
+    $certSubjectName = 'CN='
+    $certSubjectName += Read-Host -Prompt 'Enter the certificate subject name for script signing. Use exact casing, CN= prefix will be added'
+    SetSetting -Key CertSubjectName -Value $certSubjectName -Path $SettingsPath
+    "The new certificate subject name '$certSubjectName' has been stored in ${SettingsPath}."
+}
+
+Task ShowCertSubjectName -requiredVariables SettingsPath {
+    $CertSubjectName = GetSetting -Path $SettingsPath -Key CertSubjectName
+    "The stored certificate is: $CertSubjectName"
+
+    $cert = Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert |
+            Where-Object { $_.Subject -eq $CertSubjectName -and $_.NotAfter -gt (Get-Date) } |
+            Sort-Object -Property NotAfter -Descending | Select-Object -First 1
+
+    if ($cert) {
+        "A valid certificate for the subject $CertSubjectName has been found"
+    }
+    else {
+        'A valid certificate has not been found'
+    }
+}
