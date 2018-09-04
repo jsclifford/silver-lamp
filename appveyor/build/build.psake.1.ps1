@@ -1,5 +1,19 @@
 . $PSScriptRoot\build.settings.1.ps1
 
+Properties {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
+    $ModuleOutDir = "$OutDir\$ModuleName"
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
+    $UpdatableHelpOutDir = "$OutDir\UpdatableHelp"
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
+    $SharedProperties = @{}
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
+    $LineSep = "-" * 78
+}
+
 Task default -depends Build
 
 Task Test -requiredVariables TestRootDir, ModuleName, CodeCoverageEnabled, CodeCoverageFiles,CodeCoverageOutPutFile,CodeCoverageOutputFileFormat,PesterReportFolder  {
@@ -66,7 +80,7 @@ Task TestDefault <#-depends BuildSimple #> -requiredVariables TestRootDir, Modul
     Import-Module Pester
     Write-Host "Running Test Default Task."
     try {
-        #Microsoft.PowerShell.Management\Push-Location -LiteralPath "$TestRootDir\default"
+        Microsoft.PowerShell.Management\Push-Location -LiteralPath "$TestRootDir\default"
 
         if ($TestOutputFile) {
             $testing = @{
@@ -74,14 +88,12 @@ Task TestDefault <#-depends BuildSimple #> -requiredVariables TestRootDir, Modul
                 OutputFormat = $TestOutputFormat
                 PassThru     = $true
                 Verbose      = $VerbosePreference
-                Script       = "$TestRootDir\default"
             }
         }
         else {
             $testing = @{
                 PassThru     = $true
                 Verbose      = $VerbosePreference
-                Script       = "$TestRootDir\default"
             }
         }
 
