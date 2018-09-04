@@ -477,7 +477,7 @@ Task TestDefault <#-depends BuildSimple #> -requiredVariables TestRootDir, Modul
     Import-Module Pester
 
     try {
-        Microsoft.PowerShell.Management\Push-Location -LiteralPath "$TestRootDir\default"
+        #Microsoft.PowerShell.Management\Push-Location -LiteralPath "$TestRootDir\default"
 
         if ($TestOutputFile) {
             $testing = @{
@@ -485,12 +485,14 @@ Task TestDefault <#-depends BuildSimple #> -requiredVariables TestRootDir, Modul
                 OutputFormat = $TestOutputFormat
                 PassThru     = $true
                 Verbose      = $VerbosePreference
+                Script       = "$TestRootDir\default"
             }
         }
         else {
             $testing = @{
                 PassThru     = $true
                 Verbose      = $VerbosePreference
+                Script       = "$TestRootDir\default"
             }
         }
 

@@ -1,15 +1,14 @@
 Import-Module PSake
 
-$buildRoot = "$PSScriptRoot"
 if($env:default_tests -eq 'y'){
     # Builds the module by invoking psake on the build.psake.ps1 script.
     Invoke-Pester -Script "$(Split-Path $PSScriptRoot -Parent )\test"
     Write-Verbose "Running Psake task TestDefault" -Verbose
-    Invoke-psake -buildFile "$buildRoot\build.psake.ps1" -taskList "TestDefault"
+    Invoke-psake -buildFile "$PSScriptRoot\build.psake.ps1" -taskList "TestDefault"
 }else{
     # Builds the module by invoking psake on the build.psake.ps1 script.
     Write-Verbose "Running Psake task Test" -Verbose
-    Invoke-psake -buildFile "$buildRoot\build.psake.ps1" -taskList "Test"
+    Invoke-psake -buildFile "$PSScriptRoot\build.psake.ps1" -taskList "Test"
 }
 
 
