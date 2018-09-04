@@ -9,10 +9,10 @@ $seperator = @'
 
 #Installs all required modules for appveyor build.
 if($null -ne $env:APPVEYOR_BUILD_FOLDER){
-    $buildfolder = $env:APPVEYOR_BUILD_FOLDER
+    $buildfolder = "$($env:APPVEYOR_BUILD_FOLDER)\appveyor"
     Write-Verbose "This is an Appveyor Build" -Verbose
 }else{
-    $buildfolder = $Env:BUILD_SOURCESDIRECTORY
+    $buildfolder = "$($Env:BUILD_SOURCESDIRECTORY)\appveyor"
     Write-Verbose "This is an VSTS Build" -Verbose
 }
 

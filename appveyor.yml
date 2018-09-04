@@ -15,6 +15,7 @@ skip_commits:
    - '**/*.md'
    - .github/*
    - .vscode/*
+   - '*.gitignore'
 
 #---------------------------------#
 #      environment configuration  #
