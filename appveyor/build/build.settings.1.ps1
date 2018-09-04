@@ -60,6 +60,25 @@ Properties {
     # a path.  This parameter is passed through to Invoke-Pester's -OutputFormat parameter.
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
     $TestOutputFormat = "NUnitXml"
+
+    # ------------------ Script analysis properties ---------------------------
+
+    # Enable/disable use of PSScriptAnalyzer to perform script analysis.
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
+    $ScriptAnalysisEnabled = $true
+
+    # When PSScriptAnalyzer is enabled, control which severity level will generate a build failure.
+    # Valid values are Error, Warning, Information and None.  "None" will report errors but will not
+    # cause a build failure.  "Error" will fail the build only on diagnostic records that are of
+    # severity error.  "Warning" will fail the build on Warning and Error diagnostic records.
+    # "Any" will fail the build on any diagnostic record, regardless of severity.
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
+    [ValidateSet('Error', 'Warning', 'Any', 'None')]
+    $ScriptAnalysisFailBuildOnSeverityLevel = 'Error'
+
+    # Path to the PSScriptAnalyzer settings file.
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
+    $ScriptAnalyzerSettingsPath = "$BuildRootDir\ScriptAnalyzerSettings.psd1"
 }
 
 Task BeforeStageFiles {
